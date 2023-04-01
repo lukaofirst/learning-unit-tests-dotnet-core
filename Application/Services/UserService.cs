@@ -14,8 +14,8 @@ namespace Application.Services
 		{
 			_logger = logger;
 			_userRepository = userRepository;
-
 		}
+
 		public async Task<List<User>> GetAll()
 		{
 			var entities = await _userRepository.GetAll();

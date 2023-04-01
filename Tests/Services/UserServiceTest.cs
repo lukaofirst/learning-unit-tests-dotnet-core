@@ -56,6 +56,22 @@ namespace Tests.Services
 			// Assert
 			Assert.NotNull(result);
 		}
+		
+		[Trait("GetById", "Succeed")]
+		[Fact]
+		public async void GetById_Should_Call_UserService_GetById_Once()
+		{
+			// Arrange
+			var user = new User(1, "Lorem", 25, "lorem@test.com");
+
+			_userRepository.Setup(x => x.GetById(user.Id)).ReturnsAsync(user);
+
+			// Act
+			var result = await _userService.GetById(user.Id);
+
+			// Assert
+			_userRepository.Verify(x => x.GetById(user.Id), Times.Once());
+		}
 
 		[Trait("GetById", "Throw EntityNotFoundException")]
 		[Fact]
