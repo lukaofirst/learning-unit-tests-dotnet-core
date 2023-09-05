@@ -1,21 +1,21 @@
 ﻿using Application.Services;
 using Core.Entities;
-using Moq;
-using Moq.Protected;
+using NSubstitute;
 using System.Net;
 using System.Text.Json;
+using Tests.Mocks;
 
 namespace Tests.Services
 {
     public class PostServiceTest
     {
-        private readonly Mock<IHttpClientFactory> _httpClientFactory;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly PostService _postService;
 
         public PostServiceTest()
         {
-            _httpClientFactory = new Mock<IHttpClientFactory>();
-            _postService = new PostService(_httpClientFactory.Object);
+            _httpClientFactory = Substitute.For<IHttpClientFactory>();
+            _postService = new PostService(_httpClientFactory);
         }
 
         [Trait("GetPosts", "Succeed")]
@@ -35,7 +35,7 @@ namespace Tests.Services
             };
 
             var httpClient = SetupMockedHttpClient(expectedResponse);
-            _httpClientFactory.Setup(x => x.CreateClient(nameof(PostService))).Returns(httpClient);
+            _httpClientFactory.CreateClient(nameof(PostService)).Returns(httpClient);
 
             // Act
             var result = await _postService.GetPosts();
@@ -46,16 +46,9 @@ namespace Tests.Services
 
         private static HttpClient SetupMockedHttpClient(HttpResponseMessage expectedResponse)
         {
-            var handleHttpMessage = new Mock<HttpMessageHandler>(MockBehavior.Strict);
-            handleHttpMessage
-                .Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>())
-                .ReturnsAsync(expectedResponse);
+            var handleHttpMessage = new MockHttpMessageHandler(expectedResponse);
 
-            var httpClient = new HttpClient(handleHttpMessage.Object)
+            var httpClient = new HttpClient(handleHttpMessage)
             {
                 BaseAddress = new Uri("https://mockedurl.com")
             };
